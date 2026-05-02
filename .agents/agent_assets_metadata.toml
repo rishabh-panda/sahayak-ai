@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "LejTjtIUtuznj6j2laIO6"
+uri = "file://artifacts/saathi-care/public/sunrise-bg.png"
+type = "image"
+title = "Warm Indian Sunrise"
+
+[[generated]]
+id = "uhz7IS4j4gOX2RXGcLD2h"
+uri = "file://artifacts/saathi-care/public/mandala-motif.png"
+type = "image"
+title = "Gentle Mandala Motif"

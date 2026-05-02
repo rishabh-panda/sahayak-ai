@@ -3,20 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SaathiCare API - Companion app for Indian senior citizens
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: profile
+    description: User profile management
+  - name: reminders
+    description: Medication and appointment reminders
+  - name: health-records
+    description: Health tracking (vitals, blood pressure, blood sugar)
+  - name: medications
+    description: Medication management
+  - name: contacts
+    description: Family and emergency contacts
+  - name: checkin
+    description: Daily mood and wellness check-ins
+  - name: tips
+    description: Daily tips and insights
+  - name: ai
+    description: AI assistant chat
+  - name: dashboard
+    description: Dashboard summary and analytics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +42,385 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    put:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /reminders:
+    get:
+      operationId: listReminders
+      tags: [reminders]
+      summary: List all reminders
+      responses:
+        "200":
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reminder"
+    post:
+      operationId: createReminder
+      tags: [reminders]
+      summary: Create a reminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReminderBody"
+      responses:
+        "201":
+          description: Created reminder
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reminder"
+
+  /reminders/today:
+    get:
+      operationId: getTodayReminders
+      tags: [reminders]
+      summary: Get today's reminders
+      responses:
+        "200":
+          description: Today's reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reminder"
+
+  /reminders/{id}:
+    put:
+      operationId: updateReminder
+      tags: [reminders]
+      summary: Update a reminder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReminderBody"
+      responses:
+        "200":
+          description: Updated reminder
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reminder"
+    delete:
+      operationId: deleteReminder
+      tags: [reminders]
+      summary: Delete a reminder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /health-records:
+    get:
+      operationId: listHealthRecords
+      tags: [health-records]
+      summary: List health records
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [blood_pressure, blood_sugar, weight, heart_rate, temperature]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of health records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HealthRecord"
+    post:
+      operationId: createHealthRecord
+      tags: [health-records]
+      summary: Add a health record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHealthRecordBody"
+      responses:
+        "201":
+          description: Created health record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthRecord"
+
+  /health-records/summary:
+    get:
+      operationId: getHealthSummary
+      tags: [health-records]
+      summary: Get latest health vitals summary
+      responses:
+        "200":
+          description: Health summary with latest values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthSummary"
+
+  /medications:
+    get:
+      operationId: listMedications
+      tags: [medications]
+      summary: List medications
+      responses:
+        "200":
+          description: List of medications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Medication"
+    post:
+      operationId: createMedication
+      tags: [medications]
+      summary: Add a medication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMedicationBody"
+      responses:
+        "201":
+          description: Created medication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+
+  /medications/{id}:
+    put:
+      operationId: updateMedication
+      tags: [medications]
+      summary: Update a medication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMedicationBody"
+      responses:
+        "200":
+          description: Updated medication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+    delete:
+      operationId: deleteMedication
+      tags: [medications]
+      summary: Delete a medication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /contacts:
+    get:
+      operationId: listContacts
+      tags: [contacts]
+      summary: List family/emergency contacts
+      responses:
+        "200":
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contact"
+    post:
+      operationId: createContact
+      tags: [contacts]
+      summary: Add a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContactBody"
+      responses:
+        "201":
+          description: Created contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contact"
+
+  /contacts/{id}:
+    delete:
+      operationId: deleteContact
+      tags: [contacts]
+      summary: Delete a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /checkin:
+    post:
+      operationId: createCheckin
+      tags: [checkin]
+      summary: Submit daily check-in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCheckinBody"
+      responses:
+        "201":
+          description: Check-in recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checkin"
+
+  /checkin/history:
+    get:
+      operationId: getCheckinHistory
+      tags: [checkin]
+      summary: Get check-in history
+      responses:
+        "200":
+          description: Check-in history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Checkin"
+
+  /tips/daily:
+    get:
+      operationId: getDailyTips
+      tags: [tips]
+      summary: Get daily tips and motivational content
+      parameters:
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+            default: en
+      responses:
+        "200":
+          description: Daily tips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tip"
+
+  /ai/chat:
+    post:
+      operationId: sendAiMessage
+      tags: [ai]
+      summary: Send a message to the AI assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatBody"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary (today's reminders, health stats, check-in streak)
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +428,405 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        age:
+          type: integer
+        city:
+          type: string
+        language:
+          type: string
+          description: Preferred language code (en, hi, ta, te, bn, mr, gu, kn, ml, pa, or, as, ur)
+        emergencyPhone:
+          type: string
+        avatar:
+          type: string
+        fontSize:
+          type: string
+          enum: [normal, large, xlarge]
+        theme:
+          type: string
+          enum: [light, dark, high-contrast]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, age, language, fontSize, theme]
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        city:
+          type: string
+        language:
+          type: string
+        emergencyPhone:
+          type: string
+        avatar:
+          type: string
+        fontSize:
+          type: string
+          enum: [normal, large, xlarge]
+        theme:
+          type: string
+          enum: [light, dark, high-contrast]
+
+    Reminder:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [medication, appointment, exercise, meal, other]
+        time:
+          type: string
+          description: HH:MM format
+        daysOfWeek:
+          type: array
+          items:
+            type: string
+            enum: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+        isActive:
+          type: boolean
+        completedToday:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, title, type, time, daysOfWeek, isActive, completedToday]
+
+    CreateReminderBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [medication, appointment, exercise, meal, other]
+        time:
+          type: string
+        daysOfWeek:
+          type: array
+          items:
+            type: string
+      required: [title, type, time, daysOfWeek]
+
+    UpdateReminderBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [medication, appointment, exercise, meal, other]
+        time:
+          type: string
+        daysOfWeek:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        completedToday:
+          type: boolean
+
+    HealthRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [blood_pressure, blood_sugar, weight, heart_rate, temperature]
+        value:
+          type: string
+          description: Numeric value or "120/80" for blood pressure
+        unit:
+          type: string
+        notes:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+      required: [id, type, value, unit, recordedAt]
+
+    CreateHealthRecordBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [blood_pressure, blood_sugar, weight, heart_rate, temperature]
+        value:
+          type: string
+        unit:
+          type: string
+        notes:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+      required: [type, value, unit]
+
+    HealthSummary:
+      type: object
+      properties:
+        latestBloodPressure:
+          $ref: "#/components/schemas/HealthRecord"
+        latestBloodSugar:
+          $ref: "#/components/schemas/HealthRecord"
+        latestWeight:
+          $ref: "#/components/schemas/HealthRecord"
+        latestHeartRate:
+          $ref: "#/components/schemas/HealthRecord"
+        weeklyRecordCount:
+          type: integer
+      required: [weeklyRecordCount]
+
+    Medication:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        times:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: string
+        prescribedBy:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+      required: [id, name, dosage, frequency, times, isActive]
+
+    CreateMedicationBody:
+      type: object
+      properties:
+        name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        times:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: string
+        prescribedBy:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required: [name, dosage, frequency, times]
+
+    UpdateMedicationBody:
+      type: object
+      properties:
+        name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        times:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: string
+        prescribedBy:
+          type: string
+        endDate:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        relationship:
+          type: string
+          enum: [son, daughter, spouse, sibling, friend, doctor, caregiver, other]
+        phone:
+          type: string
+        isEmergency:
+          type: boolean
+        avatar:
+          type: string
+      required: [id, name, relationship, phone, isEmergency]
+
+    CreateContactBody:
+      type: object
+      properties:
+        name:
+          type: string
+        relationship:
+          type: string
+          enum: [son, daughter, spouse, sibling, friend, doctor, caregiver, other]
+        phone:
+          type: string
+        isEmergency:
+          type: boolean
+        avatar:
+          type: string
+      required: [name, relationship, phone, isEmergency]
+
+    Checkin:
+      type: object
+      properties:
+        id:
+          type: integer
+        mood:
+          type: string
+          enum: [very_happy, happy, okay, sad, very_sad]
+        energy:
+          type: string
+          enum: [high, medium, low]
+        notes:
+          type: string
+        date:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, mood, energy, date]
+
+    CreateCheckinBody:
+      type: object
+      properties:
+        mood:
+          type: string
+          enum: [very_happy, happy, okay, sad, very_sad]
+        energy:
+          type: string
+          enum: [high, medium, low]
+        notes:
+          type: string
+      required: [mood, energy]
+
+    Tip:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+          enum: [health, wellness, technology, social, spiritual, nutrition]
+        language:
+          type: string
+        emoji:
+          type: string
+      required: [id, title, content, category, language]
+
+    AiChatBody:
+      type: object
+      properties:
+        message:
+          type: string
+        language:
+          type: string
+          default: en
+        conversationHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+            required: [role, content]
+      required: [message]
+
+    AiChatResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+      required: [reply]
+
+    DashboardSummary:
+      type: object
+      properties:
+        userName:
+          type: string
+        todayRemindersTotal:
+          type: integer
+        todayRemindersCompleted:
+          type: integer
+        checkinStreak:
+          type: integer
+        todayCheckinDone:
+          type: boolean
+        activeMedicationsCount:
+          type: integer
+        latestMood:
+          type: string
+        weeklyHealthRecords:
+          type: integer
+        upcomingReminders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reminder"
+        motivationalMessage:
+          type: string
+      required:
+        - userName
+        - todayRemindersTotal
+        - todayRemindersCompleted
+        - checkinStreak
+        - todayCheckinDone
+        - activeMedicationsCount
+        - weeklyHealthRecords
+        - upcomingReminders
