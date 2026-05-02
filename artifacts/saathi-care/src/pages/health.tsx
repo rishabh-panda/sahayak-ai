@@ -7,27 +7,26 @@ import {
   getGetHealthSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Activity, Plus, Heart, Droplets, Weight, Thermometer } from "lucide-react";
+import { Activity, Plus, Heart, Droplets, Weight, Thermometer, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
 const VITAL_TYPES = [
-  { value: "blood_pressure", label: "Blood Pressure", icon: "❤️", unit: "mmHg", placeholder: "e.g. 120/80" },
-  { value: "blood_sugar", label: "Blood Sugar", icon: "🩸", unit: "mg/dL", placeholder: "e.g. 100" },
-  { value: "weight", label: "Weight", icon: "⚖️", unit: "kg", placeholder: "e.g. 70" },
-  { value: "heart_rate", label: "Heart Rate", icon: "💗", unit: "bpm", placeholder: "e.g. 72" },
-  { value: "temperature", label: "Temperature", icon: "🌡️", unit: "°F", placeholder: "e.g. 98.6" },
+  { value: "blood_pressure", label: "Blood Pressure", Icon: Heart, unit: "mmHg", placeholder: "e.g. 120/80", color: "text-rose-500 bg-rose-50" },
+  { value: "blood_sugar", label: "Blood Sugar", Icon: Droplets, unit: "mg/dL", placeholder: "e.g. 100", color: "text-amber-500 bg-amber-50" },
+  { value: "weight", label: "Weight", Icon: Weight, unit: "kg", placeholder: "e.g. 70", color: "text-blue-500 bg-blue-50" },
+  { value: "heart_rate", label: "Heart Rate", Icon: Activity, unit: "bpm", placeholder: "e.g. 72", color: "text-primary bg-primary/10" },
+  { value: "temperature", label: "Temperature", Icon: Thermometer, unit: "°F", placeholder: "e.g. 98.6", color: "text-orange-500 bg-orange-50" },
 ];
 
-const vitalIcon = (t: string) => VITAL_TYPES.find((v) => v.value === t)?.icon ?? "📊";
-const vitalLabel = (t: string) => VITAL_TYPES.find((v) => v.value === t)?.label ?? t;
-const vitalUnit = (t: string) => VITAL_TYPES.find((v) => v.value === t)?.unit ?? "";
+const getVital = (t: string) => VITAL_TYPES.find((v) => v.value === t) ?? VITAL_TYPES[0];
 
 export default function Health() {
   const { data: records = [], isLoading } = useListHealthRecords(
@@ -46,7 +45,7 @@ export default function Health() {
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
 
-  const selectedVital = VITAL_TYPES.find((v) => v.value === type);
+  const selectedVital = getVital(type);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getListHealthRecordsQueryKey({ limit: 15 }) });
@@ -66,69 +65,71 @@ export default function Health() {
       },
       {
         onSuccess: () => {
-          toast({ title: "Health Reading Saved!", description: `${selectedVital?.label}: ${value} ${selectedVital?.unit}` });
+          toast({ title: "Reading saved", description: `${selectedVital?.label}: ${value} ${selectedVital?.unit}` });
           invalidate();
           setOpen(false);
-          setValue("");
-          setNotes("");
+          setValue(""); setNotes("");
         },
       }
     );
   };
-
-  const summaryCards = [
-    { key: "latestBloodPressure", label: "Blood Pressure", icon: "❤️", unit: "mmHg" },
-    { key: "latestBloodSugar", label: "Blood Sugar", icon: "🩸", unit: "mg/dL" },
-    { key: "latestWeight", label: "Weight", icon: "⚖️", unit: "kg" },
-    { key: "latestHeartRate", label: "Heart Rate", icon: "💗", unit: "bpm" },
-  ];
 
   const formatDate = (d: string | Date) => {
     const date = typeof d === "string" ? new Date(d) : d;
     return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   };
 
+  const summaryKeys = [
+    { key: "latestBloodPressure", vital: getVital("blood_pressure") },
+    { key: "latestBloodSugar", vital: getVital("blood_sugar") },
+    { key: "latestWeight", vital: getVital("weight") },
+    { key: "latestHeartRate", vital: getVital("heart_rate") },
+  ];
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-400">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Health Tracker</h1>
-          <p className="text-lg text-muted-foreground mt-1">Log your vitals</p>
+          <h1 className="text-2xl font-bold text-foreground">Health Tracker</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Log and monitor your vitals</p>
         </div>
-        <Button
+        <button
+          data-icon-only
           data-testid="button-add-health-record"
-          size="lg"
-          className="h-14 w-14 rounded-full shadow-lg"
           onClick={() => setOpen(true)}
+          className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-md shadow-primary/25 hover:bg-primary/90 active:scale-95 transition-all"
         >
-          <Plus className="w-7 h-7" />
-        </Button>
+          <Plus className="w-5 h-5" strokeWidth={2.5} />
+        </button>
       </div>
 
       {/* Summary Cards */}
       {summaryLoading ? (
         <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {summaryCards.map(({ key, label, icon, unit }) => {
-            const record = summary ? (summary as Record<string, { value: string; recordedAt: Date } | null>)[key] : null;
+          {summaryKeys.map(({ key, vital }) => {
+            const record = summary
+              ? (summary as Record<string, { value: string; recordedAt: Date } | null>)[key]
+              : null;
+            const Icon = vital.Icon;
             return (
-              <Card key={key} className="border-border/50 shadow-sm">
-                <CardContent className="p-4 flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{icon}</span>
-                    <span className="text-sm font-medium text-muted-foreground">{label}</span>
+              <Card key={key} className="border-border/60">
+                <CardContent className="p-4">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 ${vital.color}`}>
+                    <Icon className="w-4.5 h-4.5" strokeWidth={2} />
                   </div>
                   {record ? (
                     <>
-                      <p className="text-2xl font-bold text-foreground">{record.value}</p>
-                      <p className="text-xs text-muted-foreground">{unit} · {formatDate(record.recordedAt)}</p>
+                      <p className="text-xl font-bold text-foreground">{record.value}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{vital.unit} &middot; {formatDate(record.recordedAt)}</p>
                     </>
                   ) : (
-                    <p className="text-base text-muted-foreground">Not logged yet</p>
+                    <p className="text-[14px] text-muted-foreground font-medium">—</p>
                   )}
+                  <p className="text-[12px] text-muted-foreground mt-1 font-medium">{vital.label}</p>
                 </CardContent>
               </Card>
             );
@@ -137,11 +138,14 @@ export default function Health() {
       )}
 
       {/* Weekly count */}
-      {summary && (
-        <Card className="bg-accent/10 border-accent/30">
-          <CardContent className="p-4">
-            <p className="text-lg font-semibold text-accent-foreground">
-              You logged {summary.weeklyRecordCount} health reading{summary.weeklyRecordCount !== 1 ? "s" : ""} this week. Keep it up!
+      {summary && summary.weeklyRecordCount > 0 && (
+        <Card className="border-secondary/25 bg-secondary/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-secondary/15 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4.5 h-4.5 text-secondary" strokeWidth={2} />
+            </div>
+            <p className="text-[14px] font-semibold text-foreground">
+              {summary.weeklyRecordCount} reading{summary.weeklyRecordCount !== 1 ? "s" : ""} logged this week — well done!
             </p>
           </CardContent>
         </Card>
@@ -149,65 +153,78 @@ export default function Health() {
 
       {/* History */}
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-3">Recent Readings</h2>
+        <h2 className="text-[16px] font-semibold text-foreground mb-3">Recent Readings</h2>
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
           </div>
         ) : records.length === 0 ? (
-          <Card className="border-dashed border-2">
+          <Card className="border-dashed border-2 border-border">
             <CardContent className="py-12 flex flex-col items-center gap-3">
-              <Activity className="w-16 h-16 text-muted-foreground/40" />
-              <p className="text-xl font-medium text-muted-foreground">No readings yet</p>
-              <Button size="lg" className="h-14 px-8 text-lg rounded-full mt-2" onClick={() => setOpen(true)}>
-                <Plus className="w-5 h-5 mr-2" /> Log a Reading
-              </Button>
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                <Activity className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />
+              </div>
+              <p className="text-[17px] font-semibold text-foreground">No readings yet</p>
+              <button
+                onClick={() => setOpen(true)}
+                className="mt-1 h-11 px-6 rounded-xl bg-primary text-white font-semibold text-[14px] flex items-center gap-2 shadow-md shadow-primary/25 hover:bg-primary/90 transition-all"
+              >
+                <Plus className="w-4 h-4" /> Log a Reading
+              </button>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-2">
-            {records.map((r) => (
-              <Card key={r.id} data-testid={`card-health-record-${r.id}`} className="border-border/40 shadow-sm">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <span className="text-3xl">{vitalIcon(r.type)}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold text-foreground">{vitalLabel(r.type)}</p>
-                      <p className="text-base font-bold text-foreground">{r.value} <span className="text-sm font-normal text-muted-foreground">{vitalUnit(r.type)}</span></p>
+            {records.map((r) => {
+              const v = getVital(r.type);
+              const Icon = v.Icon;
+              return (
+                <Card key={r.id} data-testid={`card-health-record-${r.id}`} className="border-border/50">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${v.color}`}>
+                      <Icon className="w-5 h-5" strokeWidth={2} />
                     </div>
-                    {r.notes && <p className="text-sm text-muted-foreground mt-0.5 italic">{r.notes}</p>}
-                    <p className="text-sm text-muted-foreground mt-0.5">{formatDate(r.recordedAt)}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-[15px] text-foreground">{v.label}</p>
+                        <span className="font-bold text-[15px] text-foreground">
+                          {r.value} <span className="text-[12px] font-normal text-muted-foreground">{v.unit}</span>
+                        </span>
+                      </div>
+                      {r.notes && <p className="text-[12px] text-muted-foreground mt-0.5 italic truncate">{r.notes}</p>}
+                      <p className="text-[12px] text-muted-foreground mt-0.5">{formatDate(r.recordedAt)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md rounded-3xl">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Log Health Reading</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Log Health Reading</DialogTitle>
           </DialogHeader>
-          <div className="space-y-5 pt-2">
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">What are you measuring?</Label>
+          <div className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">Measurement Type</Label>
               <Select value={type} onValueChange={(v) => { setType(v); setValue(""); }}>
-                <SelectTrigger data-testid="select-health-type" className="h-14 text-lg rounded-xl">
+                <SelectTrigger data-testid="select-health-type" className="h-[52px] text-[15px] rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {VITAL_TYPES.map((vt) => (
-                    <SelectItem key={vt.value} value={vt.value} className="text-lg py-3">
-                      {vt.icon} {vt.label}
+                    <SelectItem key={vt.value} value={vt.value} className="text-[15px] py-2.5">
+                      {vt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">
                 Value ({selectedVital?.unit})
               </Label>
               <Input
@@ -215,23 +232,23 @@ export default function Health() {
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={selectedVital?.placeholder}
-                className="h-14 text-lg rounded-xl"
+                className="h-[52px] text-[15px] rounded-xl"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">Notes (optional)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">Notes (optional)</Label>
               <Input
                 data-testid="input-health-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Measured after breakfast"
-                className="h-14 text-lg rounded-xl"
+                className="h-[52px] text-[15px] rounded-xl"
               />
             </div>
             <Button
               data-testid="button-save-health-record"
               size="lg"
-              className="w-full h-14 text-xl rounded-xl"
+              className="w-full h-[52px] text-[15px] font-semibold rounded-xl"
               onClick={handleCreate}
               disabled={!value.trim() || createRecord.isPending}
             >

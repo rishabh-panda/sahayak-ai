@@ -12,23 +12,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Laugh, Smile, Minus, Frown, Meh,
+  Zap, Sun, Moon, CheckCircle,
+} from "lucide-react";
 
 const MOODS = [
-  { value: "very_happy", emoji: "😄", label: "Very Happy" },
-  { value: "happy", emoji: "😊", label: "Happy" },
-  { value: "okay", emoji: "😐", label: "Okay" },
-  { value: "sad", emoji: "😔", label: "Sad" },
-  { value: "very_sad", emoji: "😢", label: "Very Sad" },
+  { value: "very_happy", label: "Great", Icon: Laugh, color: "text-green-600 bg-green-50 border-green-200 data-[active]:bg-green-600 data-[active]:text-white data-[active]:border-green-600" },
+  { value: "happy", label: "Good", Icon: Smile, color: "text-blue-500 bg-blue-50 border-blue-200 data-[active]:bg-blue-500 data-[active]:text-white data-[active]:border-blue-500" },
+  { value: "okay", label: "Okay", Icon: Meh, color: "text-yellow-500 bg-yellow-50 border-yellow-200 data-[active]:bg-yellow-500 data-[active]:text-white data-[active]:border-yellow-500" },
+  { value: "sad", label: "Low", Icon: Frown, color: "text-orange-500 bg-orange-50 border-orange-200 data-[active]:bg-orange-500 data-[active]:text-white data-[active]:border-orange-500" },
+  { value: "very_sad", label: "Very Low", Icon: Minus, color: "text-rose-600 bg-rose-50 border-rose-200 data-[active]:bg-rose-600 data-[active]:text-white data-[active]:border-rose-600" },
 ];
 
 const ENERGY = [
-  { value: "high", emoji: "⚡", label: "High Energy" },
-  { value: "medium", emoji: "🔆", label: "Medium" },
-  { value: "low", emoji: "😴", label: "Tired" },
+  { value: "high", label: "High Energy", Icon: Zap, color: "text-primary bg-primary/10 border-primary/20 data-[active]:bg-primary data-[active]:text-white data-[active]:border-primary" },
+  { value: "medium", label: "Moderate", Icon: Sun, color: "text-amber-500 bg-amber-50 border-amber-200 data-[active]:bg-amber-500 data-[active]:text-white data-[active]:border-amber-500" },
+  { value: "low", label: "Fatigued", Icon: Moon, color: "text-slate-500 bg-slate-50 border-slate-200 data-[active]:bg-slate-500 data-[active]:text-white data-[active]:border-slate-500" },
 ];
 
-const moodEmoji = (m: string) => MOODS.find((x) => x.value === m)?.emoji ?? "😊";
-const moodLabel = (m: string) => MOODS.find((x) => x.value === m)?.label ?? m;
+const getMood = (v: string) => MOODS.find((m) => m.value === v);
 
 export default function Checkin() {
   const { data: history = [], isLoading } = useGetCheckinHistory({
@@ -52,54 +55,46 @@ export default function Checkin() {
       { data: { mood: mood as "happy", energy: energy as "high", notes: notes.trim() || undefined } },
       {
         onSuccess: () => {
-          toast({ title: "Check-in Done!", description: "Thank you for sharing how you feel today." });
+          toast({ title: "Check-in complete", description: "Thank you for sharing how you feel." });
           queryClient.invalidateQueries({ queryKey: getGetCheckinHistoryQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
           setSubmitted(true);
-          setMood("");
-          setEnergy("");
-          setNotes("");
         },
       }
     );
   };
 
-  const formatDate = (d: string) => {
-    return new Date(d + "T00:00:00").toLocaleDateString("en-IN", {
-      weekday: "long",
-      day: "numeric",
-      month: "short",
+  const formatDate = (d: string) =>
+    new Date(d + "T00:00:00").toLocaleDateString("en-IN", {
+      weekday: "short", day: "numeric", month: "short",
     });
-  };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-400">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Daily Check-In</h1>
-        <p className="text-lg text-muted-foreground mt-1">How are you feeling today?</p>
+        <h1 className="text-2xl font-bold text-foreground">Daily Check-In</h1>
+        <p className="text-[13px] text-muted-foreground mt-0.5">Track your wellbeing every day</p>
       </div>
 
-      {/* Today's Check-In Form */}
+      {/* Form */}
       {!checkedInToday && !submitted ? (
-        <Card className="border-primary/20 shadow-md">
-          <CardContent className="p-6 space-y-6">
+        <Card className="border-border/60">
+          <CardContent className="p-5 space-y-6">
             {/* Mood */}
             <div className="space-y-3">
-              <Label className="text-xl font-bold">Your Mood</Label>
-              <div className="flex gap-3 flex-wrap">
-                {MOODS.map((m) => (
+              <Label className="text-[15px] font-semibold text-foreground">How are you feeling?</Label>
+              <div className="grid grid-cols-5 gap-2">
+                {MOODS.map(({ value, label, Icon, color }) => (
                   <button
-                    key={m.value}
-                    data-testid={`button-mood-${m.value}`}
-                    onClick={() => setMood(m.value)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2 min-w-[64px] ${
-                      mood === m.value
-                        ? "border-primary bg-primary/10 scale-110 shadow-md"
-                        : "border-border hover:border-primary/40"
-                    }`}
+                    key={value}
+                    data-icon-only
+                    data-active={mood === value ? "" : undefined}
+                    data-testid={`button-mood-${value}`}
+                    onClick={() => setMood(value)}
+                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all duration-200 ${color}`}
                   >
-                    <span className="text-4xl">{m.emoji}</span>
-                    <span className="text-xs font-medium text-muted-foreground">{m.label}</span>
+                    <Icon className="w-6 h-6" strokeWidth={2} />
+                    <span className="text-[10px] font-semibold leading-none">{label}</span>
                   </button>
                 ))}
               </div>
@@ -107,42 +102,40 @@ export default function Checkin() {
 
             {/* Energy */}
             <div className="space-y-3">
-              <Label className="text-xl font-bold">Energy Level</Label>
-              <div className="flex gap-3 flex-wrap">
-                {ENERGY.map((e) => (
+              <Label className="text-[15px] font-semibold text-foreground">Energy level</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {ENERGY.map(({ value, label, Icon, color }) => (
                   <button
-                    key={e.value}
-                    data-testid={`button-energy-${e.value}`}
-                    onClick={() => setEnergy(e.value)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2 min-w-[80px] ${
-                      energy === e.value
-                        ? "border-secondary bg-secondary/20 scale-110 shadow-md"
-                        : "border-border hover:border-secondary/40"
-                    }`}
+                    key={value}
+                    data-icon-only
+                    data-active={energy === value ? "" : undefined}
+                    data-testid={`button-energy-${value}`}
+                    onClick={() => setEnergy(value)}
+                    className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all duration-200 ${color}`}
                   >
-                    <span className="text-4xl">{e.emoji}</span>
-                    <span className="text-xs font-medium text-muted-foreground">{e.label}</span>
+                    <Icon className="w-6 h-6" strokeWidth={2} />
+                    <span className="text-[12px] font-semibold">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Notes */}
-            <div className="space-y-2">
-              <Label className="text-xl font-bold">Any notes? (optional)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[15px] font-semibold text-foreground">Notes (optional)</Label>
               <Input
                 data-testid="input-checkin-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Slept well, feeling rested..."
-                className="h-14 text-lg rounded-xl"
+                placeholder="Anything to note about today..."
+                className="h-[52px] text-[15px] rounded-xl"
               />
             </div>
 
             <Button
               data-testid="button-submit-checkin"
               size="lg"
-              className="w-full h-16 text-xl rounded-2xl"
+              className="w-full h-[52px] text-[15px] font-semibold rounded-xl"
               onClick={handleSubmit}
               disabled={!mood || !energy || createCheckin.isPending}
             >
@@ -151,40 +144,53 @@ export default function Checkin() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-accent/10 border-accent/30">
+        <Card className="border-secondary/25 bg-secondary/5">
           <CardContent className="p-6 flex flex-col items-center gap-3 text-center">
-            <span className="text-6xl">{mood ? moodEmoji(mood) : "✅"}</span>
-            <p className="text-2xl font-bold text-foreground">You've checked in today!</p>
-            <p className="text-lg text-muted-foreground">Thank you for sharing how you feel. Keep it up every day!</p>
+            <div className="w-14 h-14 rounded-full bg-secondary/15 flex items-center justify-center">
+              <CheckCircle className="w-7 h-7 text-secondary" strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-[18px] font-bold text-foreground">Checked in today</p>
+              <p className="text-[14px] text-muted-foreground mt-1">Keep the habit going every day!</p>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* History */}
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-3">Your Check-In History</h2>
+        <h2 className="text-[16px] font-semibold text-foreground mb-3">Check-In History</h2>
         {isLoading ? (
           <div className="space-y-2">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
           </div>
         ) : history.length === 0 ? (
-          <p className="text-lg text-muted-foreground text-center py-8">No check-ins yet. Start today!</p>
+          <p className="text-[14px] text-muted-foreground text-center py-8">No check-ins yet. Start today!</p>
         ) : (
-          <div className="space-y-3">
-            {history.map((c) => (
-              <Card key={c.id} data-testid={`card-checkin-${c.id}`} className="border-border/40 shadow-sm">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <span className="text-4xl">{moodEmoji(c.mood)}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold text-foreground">{moodLabel(c.mood)}</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(c.date)}</p>
+          <div className="space-y-2">
+            {history.map((c) => {
+              const m = getMood(c.mood);
+              const Icon = m?.Icon ?? Smile;
+              const colorBase = m?.color.split(" ")[0] ?? "text-primary";
+              return (
+                <Card key={c.id} data-testid={`card-checkin-${c.id}`} className="border-border/50">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                      <Icon className={`w-5 h-5 ${colorBase}`} strokeWidth={2} />
                     </div>
-                    {c.notes && <p className="text-sm text-muted-foreground mt-1 italic">"{c.notes}"</p>}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-[15px] text-foreground">{m?.label ?? c.mood}</p>
+                        <p className="text-[12px] text-muted-foreground">{formatDate(c.date)}</p>
+                      </div>
+                      {c.notes && (
+                        <p className="text-[13px] text-muted-foreground mt-0.5 italic truncate">"{c.notes}"</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

@@ -60,125 +60,168 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE */
+/* LIGHT MODE — Modern Futuristic Blue/Indigo */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0,0,0, .08);
+  --badge-outline: rgba(0,0,0, .04);
+  --opaque-button-border-intensity: -6;
+  --elevate-1: rgba(0,0,0, .02);
+  --elevate-2: rgba(0,0,0, .06);
 
-  --opaque-button-border-intensity: -8;
+  --background: 220 25% 97%;
+  --foreground: 224 65% 8%;
 
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-
-  --background: 43 100% 97%;
-  --foreground: 30 50% 15%;
-
-  --border: 30 30% 85%;
-  --input: 30 30% 85%;
-  --ring: 28 90% 55%;
+  --border: 220 20% 88%;
+  --input: 220 20% 88%;
+  --ring: 234 86% 60%;
 
   --card: 0 0% 100%;
-  --card-foreground: 30 50% 15%;
-  --card-border: 30 30% 90%;
+  --card-foreground: 224 65% 8%;
+  --card-border: 220 20% 91%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 30 50% 15%;
-  --popover-border: 30 30% 90%;
+  --popover-foreground: 224 65% 8%;
+  --popover-border: 220 20% 91%;
 
-  --primary: 28 90% 55%;
+  /* Indigo primary */
+  --primary: 234 86% 59%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 48 95% 45%;
-  --secondary-foreground: 30 50% 15%;
+  /* Teal secondary */
+  --secondary: 168 76% 36%;
+  --secondary-foreground: 0 0% 100%;
 
-  --muted: 40 50% 90%;
-  --muted-foreground: 30 20% 40%;
+  --muted: 220 14% 93%;
+  --muted-foreground: 220 10% 48%;
 
-  --accent: 140 40% 90%;
-  --accent-foreground: 140 50% 20%;
+  /* Light indigo accent */
+  --accent: 234 86% 96%;
+  --accent-foreground: 234 86% 40%;
 
-  --destructive: 0 70% 50%;
+  --destructive: 2 84% 57%;
   --destructive-foreground: 0 0% 100%;
 
-  --sidebar: 43 100% 95%;
-  --sidebar-foreground: 30 50% 15%;
-  --sidebar-border: 30 30% 85%;
-  --sidebar-primary: 28 90% 55%;
+  --sidebar: 220 25% 97%;
+  --sidebar-foreground: 224 65% 8%;
+  --sidebar-border: 220 20% 88%;
+  --sidebar-primary: 234 86% 59%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 40 50% 90%;
-  --sidebar-accent-foreground: 30 50% 15%;
-  --sidebar-ring: 28 90% 55%;
+  --sidebar-accent: 234 86% 96%;
+  --sidebar-accent-foreground: 234 86% 40%;
+  --sidebar-ring: 234 86% 59%;
 
-  --app-font-sans: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --app-font-serif: Georgia, serif;
-  --app-font-mono: Menlo, monospace;
-  
-  --radius: 1rem;
+  --app-font-mono: 'JetBrains Mono', Menlo, monospace;
+
+  --radius: 0.75rem;
 }
 
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255,255,255, .08);
+  --badge-outline: rgba(255,255,255, .04);
+  --opaque-button-border-intensity: 8;
+  --elevate-1: rgba(255,255,255, .03);
+  --elevate-2: rgba(255,255,255, .07);
 
-  --opaque-button-border-intensity: 9;
+  --background: 224 35% 7%;
+  --foreground: 220 20% 94%;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --border: 224 20% 16%;
+  --input: 224 20% 16%;
+  --ring: 234 86% 65%;
 
-  --background: 30 40% 10%;
-  --foreground: 40 50% 90%;
+  --card: 224 30% 10%;
+  --card-foreground: 220 20% 94%;
+  --card-border: 224 20% 16%;
 
-  --border: 30 20% 20%;
-  --input: 30 20% 20%;
-  --ring: 28 90% 55%;
+  --popover: 224 30% 10%;
+  --popover-foreground: 220 20% 94%;
+  --popover-border: 224 20% 16%;
 
-  --card: 30 30% 15%;
-  --card-foreground: 40 50% 90%;
-  --card-border: 30 20% 20%;
-
-  --popover: 30 30% 15%;
-  --popover-foreground: 40 50% 90%;
-  --popover-border: 30 20% 20%;
-
-  --primary: 28 90% 60%;
+  --primary: 234 86% 65%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 48 90% 50%;
-  --secondary-foreground: 30 50% 15%;
+  --secondary: 168 76% 42%;
+  --secondary-foreground: 0 0% 100%;
 
-  --muted: 30 20% 20%;
-  --muted-foreground: 40 20% 70%;
+  --muted: 224 20% 14%;
+  --muted-foreground: 220 10% 55%;
 
-  --accent: 140 30% 20%;
-  --accent-foreground: 140 40% 90%;
+  --accent: 234 50% 18%;
+  --accent-foreground: 234 86% 80%;
 
-  --destructive: 0 60% 40%;
+  --destructive: 2 72% 52%;
   --destructive-foreground: 0 0% 100%;
 
-  --sidebar: 30 40% 10%;
-  --sidebar-foreground: 40 50% 90%;
-  --sidebar-border: 30 20% 20%;
-  --sidebar-primary: 28 90% 60%;
+  --sidebar: 224 35% 7%;
+  --sidebar-foreground: 220 20% 94%;
+  --sidebar-border: 224 20% 16%;
+  --sidebar-primary: 234 86% 65%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 30 20% 20%;
-  --sidebar-accent-foreground: 40 50% 90%;
-  --sidebar-ring: 28 90% 55%;
+  --sidebar-accent: 234 50% 18%;
+  --sidebar-accent-foreground: 234 86% 80%;
+  --sidebar-ring: 234 86% 65%;
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply font-sans antialiased bg-background text-foreground text-lg;
+    @apply font-sans bg-background text-foreground text-[17px] leading-relaxed;
+    font-feature-settings: "cv11", "ss01";
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
+    @apply font-semibold tracking-tight;
   }
-  button {
-    @apply min-h-[56px] text-lg font-medium;
-  }
-  input, select, textarea {
-    @apply min-h-[56px] text-lg;
-  }
+}
+
+/* Fix: Only apply min-height to actual interactive button elements, not icon wrappers */
+button:not([data-icon-only]) {
+  min-height: 48px;
+}
+input, select, textarea {
+  min-height: 52px;
+  font-size: 1.0625rem;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+/* Glass morphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient border card */
+.gradient-card {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.08) 100%);
+  border: 1px solid hsl(var(--primary) / 0.2);
 }

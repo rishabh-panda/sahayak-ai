@@ -1,31 +1,31 @@
 import { useState } from "react";
 import { useGetDailyTips, useGetProfile, getGetDailyTipsQueryKey, getGetProfileQueryKey } from "@workspace/api-client-react";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Globe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "hi", label: "हिन्दी" },
-  { code: "ta", label: "தமிழ்" },
-  { code: "te", label: "తెలుగు" },
-  { code: "bn", label: "বাংলা" },
-  { code: "mr", label: "मराठी" },
-  { code: "gu", label: "ગુજરાતી" },
-  { code: "kn", label: "ಕನ್ನಡ" },
-  { code: "ml", label: "മലയാളം" },
-  { code: "pa", label: "ਪੰਜਾਬੀ" },
+  { code: "en", label: "EN", full: "English" },
+  { code: "hi", label: "हि", full: "Hindi" },
+  { code: "ta", label: "த", full: "Tamil" },
+  { code: "te", label: "తె", full: "Telugu" },
+  { code: "bn", label: "বা", full: "Bengali" },
+  { code: "mr", label: "म", full: "Marathi" },
+  { code: "gu", label: "ગુ", full: "Gujarati" },
+  { code: "kn", label: "ಕ", full: "Kannada" },
+  { code: "ml", label: "മ", full: "Malayalam" },
+  { code: "pa", label: "ਪੰ", full: "Punjabi" },
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  health: "bg-destructive/10 text-destructive",
-  wellness: "bg-accent/30 text-accent-foreground",
-  technology: "bg-primary/10 text-primary",
-  social: "bg-secondary/20 text-secondary-foreground",
-  spiritual: "bg-purple-100 text-purple-700",
-  nutrition: "bg-green-100 text-green-700",
+const CATEGORY_STYLES: Record<string, string> = {
+  health: "bg-rose-50 text-rose-600 border-rose-200",
+  wellness: "bg-secondary/10 text-secondary border-secondary/20",
+  technology: "bg-primary/10 text-primary border-primary/20",
+  social: "bg-blue-50 text-blue-600 border-blue-200",
+  spiritual: "bg-purple-50 text-purple-600 border-purple-200",
+  nutrition: "bg-green-50 text-green-600 border-green-200",
 };
 
 export default function Tips() {
@@ -37,26 +37,35 @@ export default function Tips() {
     { query: { queryKey: getGetDailyTipsQueryKey({ language: lang }) } }
   );
 
+  const currentLangFull = LANGUAGES.find((l) => l.code === lang)?.full ?? "English";
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-400">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Daily Tips</h1>
-        <p className="text-lg text-muted-foreground mt-1">Wisdom for a healthy life</p>
+        <h1 className="text-2xl font-bold text-foreground">Daily Tips</h1>
+        <p className="text-[13px] text-muted-foreground mt-0.5">Wellness guidance in your language</p>
       </div>
 
-      {/* Language selector */}
+      {/* Language Selector */}
       <div className="space-y-2">
-        <p className="text-base font-semibold text-muted-foreground">Select Language</p>
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-muted-foreground" />
+          <span className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+            Language — {currentLangFull}
+          </span>
+        </div>
         <div className="flex gap-2 flex-wrap">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
+              data-icon-only
               data-testid={`button-lang-${l.code}`}
               onClick={() => setLang(l.code)}
-              className={`px-4 py-2 rounded-full text-base font-medium transition-colors border ${
+              title={l.full}
+              className={`min-w-[44px] h-9 px-3 rounded-xl text-[13px] font-semibold border-2 transition-all duration-200 ${
                 lang === l.code
-                  ? "bg-primary text-primary-foreground border-primary shadow-md"
-                  : "bg-card text-foreground border-border hover:bg-muted"
+                  ? "bg-primary text-white border-primary shadow-sm"
+                  : "bg-card text-foreground border-border hover:border-primary/40 hover:bg-accent"
               }`}
             >
               {l.label}
@@ -67,35 +76,42 @@ export default function Tips() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
         </div>
       ) : tips.length === 0 ? (
-        <Card className="border-dashed border-2">
-          <CardContent className="py-16 flex flex-col items-center gap-4">
-            <Lightbulb className="w-16 h-16 text-muted-foreground/40" />
-            <p className="text-xl font-medium text-muted-foreground text-center">No tips available in this language yet</p>
-            <Button size="lg" className="h-14 px-8 text-lg rounded-full mt-2" onClick={() => setLang("en")}>
+        <Card className="border-dashed border-2 border-border">
+          <CardContent className="py-14 flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+              <Lightbulb className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="text-[17px] font-semibold text-foreground">No tips in this language yet</p>
+            <Button size="lg" className="h-11 px-6 text-[14px] rounded-xl mt-1" onClick={() => setLang("en")}>
               View English Tips
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {tips.map((tip) => (
-            <Card key={tip.id} data-testid={`card-tip-${tip.id}`} className="border-border/50 shadow-sm overflow-hidden">
+        <div className="space-y-3">
+          {tips.map((tip, idx) => (
+            <Card
+              key={tip.id}
+              data-testid={`card-tip-${tip.id}`}
+              className="border-border/60 hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+            >
               <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  {tip.emoji && <span className="text-4xl shrink-0 mt-0.5">{tip.emoji}</span>}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="text-xl font-bold text-foreground leading-tight">{tip.title}</h3>
-                      <Badge className={`shrink-0 capitalize text-xs ${CATEGORY_COLORS[tip.category] ?? "bg-muted"}`}>
-                        {tip.category}
-                      </Badge>
-                    </div>
-                    <p className="text-lg text-muted-foreground leading-relaxed">{tip.content}</p>
-                  </div>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h3 className="text-[16px] font-bold text-foreground leading-snug flex-1">{tip.title}</h3>
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 capitalize text-[11px] font-semibold px-2 h-5 border ${
+                      CATEGORY_STYLES[tip.category] ?? "bg-muted text-muted-foreground border-border"
+                    }`}
+                  >
+                    {tip.category}
+                  </Badge>
                 </div>
+                <p className="text-[14px] text-muted-foreground leading-relaxed">{tip.content}</p>
+                <div className="mt-3 h-0.5 w-8 rounded-full bg-gradient-to-r from-primary to-secondary opacity-40" />
               </CardContent>
             </Card>
           ))}

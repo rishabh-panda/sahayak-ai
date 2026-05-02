@@ -9,7 +9,9 @@ import {
   getGetDashboardSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, Plus, Trash2, Check, Clock, Pencil, X } from "lucide-react";
+import {
+  Bell, Plus, Trash2, CheckCircle2, Clock, Pill, Stethoscope, Dumbbell, UtensilsCrossed, CalendarDays,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,16 +23,16 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
 const REMINDER_TYPES = [
-  { value: "medication", label: "Medicine", emoji: "💊" },
-  { value: "appointment", label: "Doctor Visit", emoji: "🏥" },
-  { value: "exercise", label: "Exercise", emoji: "🧘" },
-  { value: "meal", label: "Meal", emoji: "🍽️" },
-  { value: "other", label: "Other", emoji: "📌" },
+  { value: "medication", label: "Medicine", Icon: Pill, color: "text-primary bg-primary/10" },
+  { value: "appointment", label: "Doctor Visit", Icon: Stethoscope, color: "text-secondary bg-secondary/10" },
+  { value: "exercise", label: "Exercise", Icon: Dumbbell, color: "text-orange-600 bg-orange-50" },
+  { value: "meal", label: "Meal", Icon: UtensilsCrossed, color: "text-rose-500 bg-rose-50" },
+  { value: "other", label: "Other", Icon: CalendarDays, color: "text-muted-foreground bg-muted" },
 ];
 
-const typeEmoji = (t: string) => REMINDER_TYPES.find((r) => r.value === t)?.emoji ?? "📌";
-const typeLabel = (t: string) => REMINDER_TYPES.find((r) => r.value === t)?.label ?? t;
+const getType = (t: string) => REMINDER_TYPES.find((r) => r.value === t) ?? REMINDER_TYPES[4];
 
 export default function Reminders() {
   const { data: reminders = [], isLoading } = useListReminders({ query: { queryKey: getListRemindersQueryKey() } });
@@ -52,9 +54,8 @@ export default function Reminders() {
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
   };
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day: string) =>
     setDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
-  };
 
   const handleCreate = () => {
     if (!title.trim()) return;
@@ -62,12 +63,10 @@ export default function Reminders() {
       { data: { title: title.trim(), type: type as "medication", time, daysOfWeek: days } },
       {
         onSuccess: () => {
-          toast({ title: "Reminder Set!", description: `"${title}" will remind you at ${time}` });
+          toast({ title: "Reminder created", description: `"${title}" set for ${time}` });
           invalidate();
           setOpen(false);
-          setTitle("");
-          setType("medication");
-          setTime("08:00");
+          setTitle(""); setType("medication"); setTime("08:00");
           setDays(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
         },
       }
@@ -75,163 +74,172 @@ export default function Reminders() {
   };
 
   const handleComplete = (id: number, completedToday: boolean) => {
-    updateReminder.mutate(
-      { id, data: { completedToday: !completedToday } },
-      { onSuccess: invalidate }
-    );
+    updateReminder.mutate({ id, data: { completedToday: !completedToday } }, { onSuccess: invalidate });
   };
 
-  const handleDelete = (id: number, title: string) => {
-    deleteReminder.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          toast({ title: "Reminder Removed", description: `"${title}" has been deleted.` });
-          invalidate();
-        },
-      }
-    );
+  const handleDelete = (id: number, t: string) => {
+    deleteReminder.mutate({ id }, {
+      onSuccess: () => { toast({ title: "Reminder removed", description: `"${t}" deleted.` }); invalidate(); },
+    });
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-400">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reminders</h1>
-          <p className="text-lg text-muted-foreground mt-1">Your daily schedule</p>
+          <h1 className="text-2xl font-bold text-foreground">Reminders</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Manage your daily schedule</p>
         </div>
-        <Button
+        <button
+          data-icon-only
           data-testid="button-add-reminder"
-          size="lg"
-          className="h-14 w-14 rounded-full shadow-lg"
           onClick={() => setOpen(true)}
+          className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-md shadow-primary/25 hover:bg-primary/90 active:scale-95 transition-all"
         >
-          <Plus className="w-7 h-7" />
-        </Button>
+          <Plus className="w-5 h-5" strokeWidth={2.5} />
+        </button>
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
         </div>
       ) : reminders.length === 0 ? (
-        <Card className="border-dashed border-2">
-          <CardContent className="py-16 flex flex-col items-center gap-4">
-            <Bell className="w-16 h-16 text-muted-foreground/40" />
-            <p className="text-xl font-medium text-muted-foreground text-center">No reminders yet</p>
-            <p className="text-base text-muted-foreground text-center">Tap the + button to add your first reminder</p>
-            <Button size="lg" className="h-14 px-8 text-lg rounded-full mt-2" onClick={() => setOpen(true)}>
-              <Plus className="w-5 h-5 mr-2" /> Add Reminder
-            </Button>
+        <Card className="border-dashed border-2 border-border">
+          <CardContent className="py-14 flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+              <Bell className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="text-[17px] font-semibold text-foreground">No reminders yet</p>
+            <p className="text-[14px] text-muted-foreground text-center">Add your first reminder to stay on schedule</p>
+            <button
+              onClick={() => setOpen(true)}
+              className="mt-2 h-11 px-6 rounded-xl bg-primary text-white font-semibold text-[14px] flex items-center gap-2 shadow-md shadow-primary/25 hover:bg-primary/90 transition-all"
+            >
+              <Plus className="w-4 h-4" /> Add Reminder
+            </button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {reminders.map((r) => (
-            <Card
-              key={r.id}
-              data-testid={`card-reminder-${r.id}`}
-              className={`border-border/50 shadow-sm transition-all ${r.completedToday ? "opacity-60" : ""}`}
-            >
-              <CardContent className="p-4 flex items-center gap-4">
-                <button
-                  data-testid={`button-complete-${r.id}`}
-                  onClick={() => handleComplete(r.id, r.completedToday)}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 transition-colors text-2xl border-2 ${
-                    r.completedToday
-                      ? "bg-accent border-accent-foreground/20 text-accent-foreground"
-                      : "border-border hover:border-primary hover:bg-primary/10"
-                  }`}
-                >
-                  {r.completedToday ? <Check className="w-7 h-7" /> : typeEmoji(r.type)}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <h3 className={`text-xl font-bold text-foreground ${r.completedToday ? "line-through" : ""}`}>
-                    {r.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-base font-medium">{r.time}</span>
-                    </div>
-                    <Badge variant="secondary" className="text-sm px-2 py-0.5">
-                      {typeLabel(r.type)}
-                    </Badge>
-                  </div>
-                  <div className="flex gap-1 mt-2 flex-wrap">
-                    {r.daysOfWeek.map((d) => (
-                      <span key={d} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                        {d}
+          {reminders.map((r) => {
+            const t = getType(r.type);
+            const Icon = t.Icon;
+            return (
+              <Card
+                key={r.id}
+                data-testid={`card-reminder-${r.id}`}
+                className={`border-border/60 transition-all duration-200 ${r.completedToday ? "opacity-55" : "hover:border-primary/30 hover:shadow-sm"}`}
+              >
+                <CardContent className="p-4 flex items-center gap-3">
+                  {/* Complete toggle */}
+                  <button
+                    data-icon-only
+                    data-testid={`button-complete-${r.id}`}
+                    onClick={() => handleComplete(r.id, r.completedToday)}
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
+                      r.completedToday
+                        ? "bg-secondary/15 text-secondary"
+                        : `${t.color} hover:scale-105`
+                    }`}
+                  >
+                    {r.completedToday ? (
+                      <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
+                    ) : (
+                      <Icon className="w-5 h-5" strokeWidth={2} />
+                    )}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-[15px] text-foreground ${r.completedToday ? "line-through text-muted-foreground" : ""}`}>
+                      {r.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="flex items-center gap-1 text-[13px] text-muted-foreground font-medium">
+                        <Clock className="w-3.5 h-3.5" /> {r.time}
                       </span>
-                    ))}
+                      <Badge variant="secondary" className="text-[11px] px-2 py-0 h-5 font-medium">
+                        {t.label}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-1 mt-1.5 flex-wrap">
+                      {r.daysOfWeek.map((d) => (
+                        <span key={d} className="text-[11px] px-1.5 py-0.5 rounded-md bg-accent text-accent-foreground font-medium">
+                          {d.slice(0, 1)}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <button
-                  data-testid={`button-delete-${r.id}`}
-                  onClick={() => handleDelete(r.id, r.title)}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </CardContent>
-            </Card>
-          ))}
+
+                  <button
+                    data-icon-only
+                    data-testid={`button-delete-${r.id}`}
+                    onClick={() => handleDelete(r.id, r.title)}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" strokeWidth={2} />
+                  </button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md rounded-3xl">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">New Reminder</DialogTitle>
+            <DialogTitle className="text-xl font-bold">New Reminder</DialogTitle>
           </DialogHeader>
-          <div className="space-y-5 pt-2">
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">What to remind?</Label>
+          <div className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">What to remind?</Label>
               <Input
                 data-testid="input-reminder-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Take Blood Pressure Medicine"
-                className="h-14 text-lg rounded-xl"
+                className="h-[52px] text-[15px] rounded-xl"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">Type</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">Type</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger data-testid="select-reminder-type" className="h-14 text-lg rounded-xl">
+                <SelectTrigger data-testid="select-reminder-type" className="h-[52px] text-[15px] rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {REMINDER_TYPES.map((rt) => (
-                    <SelectItem key={rt.value} value={rt.value} className="text-lg py-3">
-                      {rt.emoji} {rt.label}
+                    <SelectItem key={rt.value} value={rt.value} className="text-[15px] py-2.5">
+                      {rt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">Time</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">Time</Label>
               <Input
                 data-testid="input-reminder-time"
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="h-14 text-lg rounded-xl"
+                className="h-[52px] text-[15px] rounded-xl"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-lg font-semibold">Days</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[14px] font-semibold text-foreground">Days of week</Label>
               <div className="flex gap-2 flex-wrap">
                 {DAYS.map((d) => (
                   <button
                     key={d}
+                    data-icon-only
                     data-testid={`button-day-${d}`}
                     onClick={() => toggleDay(d)}
-                    className={`h-12 w-12 rounded-full text-sm font-bold transition-colors ${
+                    className={`w-10 h-10 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
                       days.includes(d)
-                        ? "bg-primary text-primary-foreground shadow-md"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-accent"
                     }`}
                   >
                     {d.slice(0, 1)}
@@ -242,7 +250,7 @@ export default function Reminders() {
             <Button
               data-testid="button-save-reminder"
               size="lg"
-              className="w-full h-14 text-xl rounded-xl"
+              className="w-full h-[52px] text-[15px] font-semibold rounded-xl"
               onClick={handleCreate}
               disabled={!title.trim() || days.length === 0 || createReminder.isPending}
             >
