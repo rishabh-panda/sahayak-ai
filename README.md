@@ -2,6 +2,16 @@
 
 > An AI-powered full-stack health companion web app designed specifically for Indian senior citizens (age 50+). Built with React, Express 5, PostgreSQL, and Drizzle ORM — featuring multilingual wellness tips, medication reminders, daily check-ins, health tracking, an AI assistant, and emergency contacts.
 
+## Feature Previews
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6c5864c4-2d2a-49de-ac41-219d65db6680" width="30%" />
+  &nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/826209bf-ccea-4e5d-acb1-110323a14393" width="30%" />
+  &nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/9c6dc1c1-2025-4bc1-ad55-575984d29156" width="30%" />
+</p>
+
 ---
 
 ## Table of Contents
