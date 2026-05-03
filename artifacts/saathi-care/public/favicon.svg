@@ -1,3 +1,24 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+  <rect width="180" height="180" rx="40" fill="#4F46E5"/>
+  <!-- Brain circuit icon centered -->
+  <g transform="translate(34, 34) scale(1.55)" stroke="white" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Brain left lobe -->
+    <path d="M12 5C12 5 8 5 6 8C4 11 4 14 6 16C4 18 4 20 5 22C6 24 8 25 10 25"/>
+    <!-- Brain right lobe -->
+    <path d="M12 5C12 5 16 5 18 8C20 11 20 14 18 16C20 18 20 20 19 22C18 24 16 25 14 25"/>
+    <!-- Center spine -->
+    <line x1="12" y1="5" x2="12" y2="25"/>
+    <!-- Neural connections -->
+    <line x1="6" y1="16" x2="10" y2="16"/>
+    <line x1="18" y1="16" x2="14" y2="16"/>
+    <circle cx="10" cy="16" r="2" fill="white" stroke="none"/>
+    <circle cx="14" cy="16" r="2" fill="white" stroke="none"/>
+    <circle cx="12" cy="10" r="2" fill="white" stroke="none"/>
+    <circle cx="12" cy="21" r="2" fill="white" stroke="none"/>
+    <!-- Connecting nodes -->
+    <line x1="10" y1="16" x2="12" y2="10"/>
+    <line x1="14" y1="16" x2="12" y2="10"/>
+    <line x1="10" y1="16" x2="12" y2="21"/>
+    <line x1="14" y1="16" x2="12" y2="21"/>
+  </g>
 </svg>

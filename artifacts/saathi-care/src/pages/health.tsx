@@ -7,7 +7,7 @@ import {
   getGetHealthSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Activity, Plus, Heart, Droplets, Weight, Thermometer, TrendingUp } from "lucide-react";
+import { Activity, Plus, Heart, Gauge, Scale, Thermometer, TrendingUp, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,11 +19,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
 const VITAL_TYPES = [
-  { value: "blood_pressure", label: "Blood Pressure", Icon: Heart, unit: "mmHg", placeholder: "e.g. 120/80", color: "text-rose-500 bg-rose-50" },
-  { value: "blood_sugar", label: "Blood Sugar", Icon: Droplets, unit: "mg/dL", placeholder: "e.g. 100", color: "text-amber-500 bg-amber-50" },
-  { value: "weight", label: "Weight", Icon: Weight, unit: "kg", placeholder: "e.g. 70", color: "text-blue-500 bg-blue-50" },
-  { value: "heart_rate", label: "Heart Rate", Icon: Activity, unit: "bpm", placeholder: "e.g. 72", color: "text-primary bg-primary/10" },
-  { value: "temperature", label: "Temperature", Icon: Thermometer, unit: "°F", placeholder: "e.g. 98.6", color: "text-orange-500 bg-orange-50" },
+  { value: "blood_pressure", label: "Blood Pressure", Icon: Gauge,        unit: "mmHg",  placeholder: "e.g. 120/80", color: "text-rose-500 bg-rose-50" },
+  { value: "blood_sugar",    label: "Blood Sugar",    Icon: FlaskConical,  unit: "mg/dL", placeholder: "e.g. 100",    color: "text-amber-500 bg-amber-50" },
+  { value: "weight",         label: "Weight",         Icon: Scale,         unit: "kg",    placeholder: "e.g. 70",     color: "text-blue-500 bg-blue-50" },
+  { value: "heart_rate",     label: "Heart Rate",     Icon: Heart,         unit: "bpm",   placeholder: "e.g. 72",     color: "text-primary bg-primary/10" },
+  { value: "temperature",    label: "Temperature",    Icon: Thermometer,   unit: "°F",    placeholder: "e.g. 98.6",   color: "text-orange-500 bg-orange-50" },
 ];
 
 const getVital = (t: string) => VITAL_TYPES.find((v) => v.value === t) ?? VITAL_TYPES[0];
@@ -44,6 +44,7 @@ export default function Health() {
   const [type, setType] = useState("blood_pressure");
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [valueError, setValueError] = useState(false);
 
   const selectedVital = getVital(type);
 
@@ -53,7 +54,8 @@ export default function Health() {
   };
 
   const handleCreate = () => {
-    if (!value.trim()) return;
+    if (!value.trim()) { setValueError(true); return; }
+    setValueError(false);
     createRecord.mutate(
       {
         data: {
@@ -70,20 +72,21 @@ export default function Health() {
           setOpen(false);
           setValue(""); setNotes("");
         },
+        onError: () => toast({ title: "Could not save reading", variant: "destructive" }),
       }
     );
   };
 
   const formatDate = (d: string | Date) => {
     const date = typeof d === "string" ? new Date(d) : d;
-    return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   };
 
   const summaryKeys = [
     { key: "latestBloodPressure", vital: getVital("blood_pressure") },
-    { key: "latestBloodSugar", vital: getVital("blood_sugar") },
-    { key: "latestWeight", vital: getVital("weight") },
-    { key: "latestHeartRate", vital: getVital("heart_rate") },
+    { key: "latestBloodSugar",    vital: getVital("blood_sugar") },
+    { key: "latestWeight",        vital: getVital("weight") },
+    { key: "latestHeartRate",     vital: getVital("heart_rate") },
   ];
 
   return (
@@ -96,6 +99,7 @@ export default function Health() {
         <button
           data-icon-only
           data-testid="button-add-health-record"
+          aria-label="Log a new health reading"
           onClick={() => setOpen(true)}
           className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-md shadow-primary/25 hover:bg-primary/90 active:scale-95 transition-all"
         >
@@ -119,15 +123,15 @@ export default function Health() {
               <Card key={key} className="border-border/60">
                 <CardContent className="p-4">
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 ${vital.color}`}>
-                    <Icon className="w-4.5 h-4.5" strokeWidth={2} />
+                    <Icon className="w-4.5 h-4.5" strokeWidth={2} aria-hidden="true" />
                   </div>
                   {record ? (
                     <>
                       <p className="text-xl font-bold text-foreground">{record.value}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{vital.unit} &middot; {formatDate(record.recordedAt)}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{vital.unit}</p>
                     </>
                   ) : (
-                    <p className="text-[14px] text-muted-foreground font-medium">—</p>
+                    <p className="text-[15px] text-muted-foreground font-medium">Not logged</p>
                   )}
                   <p className="text-[12px] text-muted-foreground mt-1 font-medium">{vital.label}</p>
                 </CardContent>
@@ -142,10 +146,10 @@ export default function Health() {
         <Card className="border-secondary/25 bg-secondary/5">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-secondary/15 flex items-center justify-center shrink-0">
-              <TrendingUp className="w-4.5 h-4.5 text-secondary" strokeWidth={2} />
+              <TrendingUp className="w-4.5 h-4.5 text-secondary" strokeWidth={2} aria-hidden="true" />
             </div>
             <p className="text-[14px] font-semibold text-foreground">
-              {summary.weeklyRecordCount} reading{summary.weeklyRecordCount !== 1 ? "s" : ""} logged this week — well done!
+              {summary.weeklyRecordCount} reading{summary.weeklyRecordCount !== 1 ? "s" : ""} logged this week — great work!
             </p>
           </CardContent>
         </Card>
@@ -165,6 +169,7 @@ export default function Health() {
                 <Activity className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />
               </div>
               <p className="text-[17px] font-semibold text-foreground">No readings yet</p>
+              <p className="text-[14px] text-muted-foreground text-center">Start logging your vitals to track your health</p>
               <button
                 onClick={() => setOpen(true)}
                 className="mt-1 h-11 px-6 rounded-xl bg-primary text-white font-semibold text-[14px] flex items-center gap-2 shadow-md shadow-primary/25 hover:bg-primary/90 transition-all"
@@ -182,7 +187,7 @@ export default function Health() {
                 <Card key={r.id} data-testid={`card-health-record-${r.id}`} className="border-border/50">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${v.color}`}>
-                      <Icon className="w-5 h-5" strokeWidth={2} />
+                      <Icon className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -202,7 +207,8 @@ export default function Health() {
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Log Dialog */}
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setValueError(false); }}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Log Health Reading</DialogTitle>
@@ -210,30 +216,31 @@ export default function Health() {
           <div className="space-y-4 pt-1">
             <div className="space-y-1.5">
               <Label className="text-[14px] font-semibold text-foreground">Measurement Type</Label>
-              <Select value={type} onValueChange={(v) => { setType(v); setValue(""); }}>
+              <Select value={type} onValueChange={(v) => { setType(v); setValue(""); setValueError(false); }}>
                 <SelectTrigger data-testid="select-health-type" className="h-[52px] text-[15px] rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {VITAL_TYPES.map((vt) => (
-                    <SelectItem key={vt.value} value={vt.value} className="text-[15px] py-2.5">
-                      {vt.label}
-                    </SelectItem>
+                    <SelectItem key={vt.value} value={vt.value} className="text-[15px] py-2.5">{vt.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-[14px] font-semibold text-foreground">
-                Value ({selectedVital?.unit})
+                Value ({selectedVital?.unit}) *
               </Label>
               <Input
                 data-testid="input-health-value"
                 value={value}
-                onChange={(e) => setValue(e.target.value)}
+                onChange={(e) => { setValue(e.target.value); setValueError(false); }}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 placeholder={selectedVital?.placeholder}
-                className="h-[52px] text-[15px] rounded-xl"
+                className={`h-[52px] text-[15px] rounded-xl ${valueError ? "border-destructive" : ""}`}
+                aria-invalid={valueError}
               />
+              {valueError && <p className="text-[12px] text-destructive font-medium">Please enter a value</p>}
             </div>
             <div className="space-y-1.5">
               <Label className="text-[14px] font-semibold text-foreground">Notes (optional)</Label>
@@ -250,7 +257,7 @@ export default function Health() {
               size="lg"
               className="w-full h-[52px] text-[15px] font-semibold rounded-xl"
               onClick={handleCreate}
-              disabled={!value.trim() || createRecord.isPending}
+              disabled={createRecord.isPending}
             >
               {createRecord.isPending ? "Saving..." : "Save Reading"}
             </Button>

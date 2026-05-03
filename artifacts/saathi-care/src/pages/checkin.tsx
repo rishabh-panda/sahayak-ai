@@ -17,21 +17,77 @@ import {
   Zap, Sun, Moon, CheckCircle,
 } from "lucide-react";
 
-const MOODS = [
-  { value: "very_happy", label: "Great", Icon: Laugh, color: "text-green-600 bg-green-50 border-green-200 data-[active]:bg-green-600 data-[active]:text-white data-[active]:border-green-600" },
-  { value: "happy", label: "Good", Icon: Smile, color: "text-blue-500 bg-blue-50 border-blue-200 data-[active]:bg-blue-500 data-[active]:text-white data-[active]:border-blue-500" },
-  { value: "okay", label: "Okay", Icon: Meh, color: "text-yellow-500 bg-yellow-50 border-yellow-200 data-[active]:bg-yellow-500 data-[active]:text-white data-[active]:border-yellow-500" },
-  { value: "sad", label: "Low", Icon: Frown, color: "text-orange-500 bg-orange-50 border-orange-200 data-[active]:bg-orange-500 data-[active]:text-white data-[active]:border-orange-500" },
-  { value: "very_sad", label: "Very Low", Icon: Minus, color: "text-rose-600 bg-rose-50 border-rose-200 data-[active]:bg-rose-600 data-[active]:text-white data-[active]:border-rose-600" },
+type MoodOption = {
+  value: string;
+  label: string;
+  Icon: React.ElementType;
+  iconColor: string;
+  selected: string;
+  unselected: string;
+};
+
+type EnergyOption = {
+  value: string;
+  label: string;
+  Icon: React.ElementType;
+  iconColor: string;
+  selected: string;
+  unselected: string;
+};
+
+const MOODS: MoodOption[] = [
+  {
+    value: "very_happy", label: "Great", Icon: Laugh, iconColor: "text-green-600",
+    selected: "bg-green-600 text-white border-green-600 shadow-md shadow-green-600/30",
+    unselected: "text-green-600 bg-green-50 border-green-200 hover:bg-green-100",
+  },
+  {
+    value: "happy", label: "Good", Icon: Smile, iconColor: "text-blue-500",
+    selected: "bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/30",
+    unselected: "text-blue-500 bg-blue-50 border-blue-200 hover:bg-blue-100",
+  },
+  {
+    value: "okay", label: "Okay", Icon: Meh, iconColor: "text-yellow-500",
+    selected: "bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/30",
+    unselected: "text-yellow-500 bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
+  },
+  {
+    value: "sad", label: "Low", Icon: Frown, iconColor: "text-orange-500",
+    selected: "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/30",
+    unselected: "text-orange-500 bg-orange-50 border-orange-200 hover:bg-orange-100",
+  },
+  {
+    value: "very_sad", label: "Very Low", Icon: Minus, iconColor: "text-rose-600",
+    selected: "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/30",
+    unselected: "text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100",
+  },
 ];
 
-const ENERGY = [
-  { value: "high", label: "High Energy", Icon: Zap, color: "text-primary bg-primary/10 border-primary/20 data-[active]:bg-primary data-[active]:text-white data-[active]:border-primary" },
-  { value: "medium", label: "Moderate", Icon: Sun, color: "text-amber-500 bg-amber-50 border-amber-200 data-[active]:bg-amber-500 data-[active]:text-white data-[active]:border-amber-500" },
-  { value: "low", label: "Fatigued", Icon: Moon, color: "text-slate-500 bg-slate-50 border-slate-200 data-[active]:bg-slate-500 data-[active]:text-white data-[active]:border-slate-500" },
+const ENERGY: EnergyOption[] = [
+  {
+    value: "high", label: "High Energy", Icon: Zap, iconColor: "text-primary",
+    selected: "bg-primary text-white border-primary shadow-md shadow-primary/30",
+    unselected: "text-primary bg-primary/10 border-primary/20 hover:bg-primary/15",
+  },
+  {
+    value: "medium", label: "Moderate", Icon: Sun, iconColor: "text-amber-500",
+    selected: "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/30",
+    unselected: "text-amber-500 bg-amber-50 border-amber-200 hover:bg-amber-100",
+  },
+  {
+    value: "low", label: "Fatigued", Icon: Moon, iconColor: "text-slate-500",
+    selected: "bg-slate-500 text-white border-slate-500 shadow-md shadow-slate-500/30",
+    unselected: "text-slate-500 bg-slate-50 border-slate-200 hover:bg-slate-100",
+  },
 ];
 
-const getMood = (v: string) => MOODS.find((m) => m.value === v);
+/** Returns today's date string in IST (UTC+5:30) as YYYY-MM-DD */
+function getISTDateString(): string {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istDate = new Date(now.getTime() + istOffset);
+  return istDate.toISOString().split("T")[0];
+}
 
 export default function Checkin() {
   const { data: history = [], isLoading } = useGetCheckinHistory({
@@ -46,7 +102,7 @@ export default function Checkin() {
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const todayDate = new Date().toISOString().split("T")[0];
+  const todayDate = getISTDateString();
   const checkedInToday = history.some((c) => c.date === todayDate);
 
   const handleSubmit = () => {
@@ -55,10 +111,13 @@ export default function Checkin() {
       { data: { mood: mood as "happy", energy: energy as "high", notes: notes.trim() || undefined } },
       {
         onSuccess: () => {
-          toast({ title: "Check-in complete", description: "Thank you for sharing how you feel." });
+          toast({ title: "Check-in complete", description: "Thank you for sharing how you feel today." });
           queryClient.invalidateQueries({ queryKey: getGetCheckinHistoryQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
           setSubmitted(true);
+        },
+        onError: () => {
+          toast({ title: "Could not save check-in", description: "Please try again.", variant: "destructive" });
         },
       }
     );
@@ -82,41 +141,61 @@ export default function Checkin() {
           <CardContent className="p-5 space-y-6">
             {/* Mood */}
             <div className="space-y-3">
-              <Label className="text-[15px] font-semibold text-foreground">How are you feeling?</Label>
+              <Label className="text-[15px] font-semibold text-foreground">
+                How are you feeling?
+                {!mood && <span className="text-[12px] text-muted-foreground font-normal ml-2">— please select one</span>}
+              </Label>
               <div className="grid grid-cols-5 gap-2">
-                {MOODS.map(({ value, label, Icon, color }) => (
-                  <button
-                    key={value}
-                    data-icon-only
-                    data-active={mood === value ? "" : undefined}
-                    data-testid={`button-mood-${value}`}
-                    onClick={() => setMood(value)}
-                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all duration-200 ${color}`}
-                  >
-                    <Icon className="w-6 h-6" strokeWidth={2} />
-                    <span className="text-[10px] font-semibold leading-none">{label}</span>
-                  </button>
-                ))}
+                {MOODS.map((item) => {
+                  const isSelected = mood === item.value;
+                  const Icon = item.Icon;
+                  return (
+                    <button
+                      key={item.value}
+                      data-icon-only
+                      data-testid={`button-mood-${item.value}`}
+                      aria-label={`Mood: ${item.label}`}
+                      aria-pressed={isSelected}
+                      onClick={() => setMood(item.value)}
+                      className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all duration-200 ${
+                        isSelected ? item.selected : item.unselected
+                      }`}
+                    >
+                      <Icon className={`w-6 h-6 ${isSelected ? "text-white" : item.iconColor}`} strokeWidth={2} />
+                      <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Energy */}
             <div className="space-y-3">
-              <Label className="text-[15px] font-semibold text-foreground">Energy level</Label>
+              <Label className="text-[15px] font-semibold text-foreground">
+                Energy level
+                {!energy && <span className="text-[12px] text-muted-foreground font-normal ml-2">— please select one</span>}
+              </Label>
               <div className="grid grid-cols-3 gap-2">
-                {ENERGY.map(({ value, label, Icon, color }) => (
-                  <button
-                    key={value}
-                    data-icon-only
-                    data-active={energy === value ? "" : undefined}
-                    data-testid={`button-energy-${value}`}
-                    onClick={() => setEnergy(value)}
-                    className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all duration-200 ${color}`}
-                  >
-                    <Icon className="w-6 h-6" strokeWidth={2} />
-                    <span className="text-[12px] font-semibold">{label}</span>
-                  </button>
-                ))}
+                {ENERGY.map((item) => {
+                  const isSelected = energy === item.value;
+                  const Icon = item.Icon;
+                  return (
+                    <button
+                      key={item.value}
+                      data-icon-only
+                      data-testid={`button-energy-${item.value}`}
+                      aria-label={`Energy: ${item.label}`}
+                      aria-pressed={isSelected}
+                      onClick={() => setEnergy(item.value)}
+                      className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all duration-200 ${
+                        isSelected ? item.selected : item.unselected
+                      }`}
+                    >
+                      <Icon className={`w-6 h-6 ${isSelected ? "text-white" : item.iconColor}`} strokeWidth={2} />
+                      <span className="text-[12px] font-semibold">{item.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -127,6 +206,7 @@ export default function Checkin() {
                 data-testid="input-checkin-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 placeholder="Anything to note about today..."
                 className="h-[52px] text-[15px] rounded-xl"
               />
@@ -169,14 +249,15 @@ export default function Checkin() {
         ) : (
           <div className="space-y-2">
             {history.map((c) => {
-              const m = getMood(c.mood);
+              const m = MOODS.find((item) => item.value === c.mood);
               const Icon = m?.Icon ?? Smile;
-              const colorBase = m?.color.split(" ")[0] ?? "text-primary";
+              const iconColor = m?.iconColor ?? "text-primary";
+              const bgColor = m ? m.unselected.split(" ")[2] : "bg-muted";
               return (
                 <Card key={c.id} data-testid={`card-checkin-${c.id}`} className="border-border/50">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                      <Icon className={`w-5 h-5 ${colorBase}`} strokeWidth={2} />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${bgColor}`}>
+                      <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">

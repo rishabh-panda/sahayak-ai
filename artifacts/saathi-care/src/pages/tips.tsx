@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetDailyTips, useGetProfile, getGetDailyTipsQueryKey, getGetProfileQueryKey } from "@workspace/api-client-react";
 import { Lightbulb, Globe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +30,17 @@ const CATEGORY_STYLES: Record<string, string> = {
 
 export default function Tips() {
   const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey() } });
-  const [lang, setLang] = useState(profile?.language ?? "en");
+  const [lang, setLang] = useState<string>("en");
+  const [initialized, setInitialized] = useState(false);
+
+  // Sync language with profile preference once loaded (fix #4)
+  useEffect(() => {
+    if (profile?.language && !initialized) {
+      const supported = LANGUAGES.find((l) => l.code === profile.language);
+      if (supported) setLang(profile.language);
+      setInitialized(true);
+    }
+  }, [profile?.language, initialized]);
 
   const { data: tips = [], isLoading } = useGetDailyTips(
     { language: lang },
@@ -49,18 +59,20 @@ export default function Tips() {
       {/* Language Selector */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-muted-foreground" />
+          <Globe className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <span className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
             Language — {currentLangFull}
           </span>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap" role="radiogroup" aria-label="Select language for tips">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
               data-icon-only
               data-testid={`button-lang-${l.code}`}
               onClick={() => setLang(l.code)}
+              aria-label={l.full}
+              aria-pressed={lang === l.code}
               title={l.full}
               className={`min-w-[44px] h-9 px-3 rounded-xl text-[13px] font-semibold border-2 transition-all duration-200 ${
                 lang === l.code
@@ -84,7 +96,8 @@ export default function Tips() {
             <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
               <Lightbulb className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />
             </div>
-            <p className="text-[17px] font-semibold text-foreground">No tips in this language yet</p>
+            <p className="text-[17px] font-semibold text-foreground">No tips in {currentLangFull} yet</p>
+            <p className="text-[14px] text-muted-foreground text-center">English tips are always available</p>
             <Button size="lg" className="h-11 px-6 text-[14px] rounded-xl mt-1" onClick={() => setLang("en")}>
               View English Tips
             </Button>
@@ -92,7 +105,7 @@ export default function Tips() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {tips.map((tip, idx) => (
+          {tips.map((tip) => (
             <Card
               key={tip.id}
               data-testid={`card-tip-${tip.id}`}
@@ -111,7 +124,7 @@ export default function Tips() {
                   </Badge>
                 </div>
                 <p className="text-[14px] text-muted-foreground leading-relaxed">{tip.content}</p>
-                <div className="mt-3 h-0.5 w-8 rounded-full bg-gradient-to-r from-primary to-secondary opacity-40" />
+                <div className="mt-3 h-0.5 w-8 rounded-full bg-gradient-to-r from-primary to-secondary opacity-50" />
               </CardContent>
             </Card>
           ))}

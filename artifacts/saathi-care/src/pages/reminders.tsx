@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,14 +26,24 @@ import { useToast } from "@/hooks/use-toast";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const REMINDER_TYPES = [
-  { value: "medication", label: "Medicine", Icon: Pill, color: "text-primary bg-primary/10" },
+  { value: "medication", label: "Medicine",    Icon: Pill,          color: "text-primary bg-primary/10" },
   { value: "appointment", label: "Doctor Visit", Icon: Stethoscope, color: "text-secondary bg-secondary/10" },
-  { value: "exercise", label: "Exercise", Icon: Dumbbell, color: "text-orange-600 bg-orange-50" },
-  { value: "meal", label: "Meal", Icon: UtensilsCrossed, color: "text-rose-500 bg-rose-50" },
-  { value: "other", label: "Other", Icon: CalendarDays, color: "text-muted-foreground bg-muted" },
+  { value: "exercise",    label: "Exercise",   Icon: Dumbbell,      color: "text-orange-600 bg-orange-50" },
+  { value: "meal",        label: "Meal",       Icon: UtensilsCrossed, color: "text-rose-500 bg-rose-50" },
+  { value: "other",       label: "Other",      Icon: CalendarDays,  color: "text-muted-foreground bg-muted" },
 ];
 
 const getType = (t: string) => REMINDER_TYPES.find((r) => r.value === t) ?? REMINDER_TYPES[4];
+
+/** Convert "08:00" → "8:00 AM", "18:00" → "6:00 PM" */
+function fmt12h(time: string): string {
+  const [hStr, mStr] = time.split(":");
+  const h = parseInt(hStr, 10);
+  const m = mStr ?? "00";
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return `${h12}:${m} ${period}`;
+}
 
 export default function Reminders() {
   const { data: reminders = [], isLoading } = useListReminders({ query: { queryKey: getListRemindersQueryKey() } });
@@ -43,10 +54,12 @@ export default function Reminders() {
   const { toast } = useToast();
 
   const [open, setOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
   const [title, setTitle] = useState("");
   const [type, setType] = useState("medication");
   const [time, setTime] = useState("08:00");
   const [days, setDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+  const [titleError, setTitleError] = useState(false);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getListRemindersQueryKey() });
@@ -58,17 +71,22 @@ export default function Reminders() {
     setDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
 
   const handleCreate = () => {
-    if (!title.trim()) return;
+    if (!title.trim()) { setTitleError(true); return; }
+    if (days.length === 0) {
+      toast({ title: "Select at least one day", variant: "destructive" }); return;
+    }
+    setTitleError(false);
     createReminder.mutate(
       { data: { title: title.trim(), type: type as "medication", time, daysOfWeek: days } },
       {
         onSuccess: () => {
-          toast({ title: "Reminder created", description: `"${title}" set for ${time}` });
+          toast({ title: "Reminder created", description: `"${title.trim()}" set for ${fmt12h(time)}` });
           invalidate();
           setOpen(false);
           setTitle(""); setType("medication"); setTime("08:00");
           setDays(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
         },
+        onError: () => toast({ title: "Could not create reminder", variant: "destructive" }),
       }
     );
   };
@@ -77,9 +95,14 @@ export default function Reminders() {
     updateReminder.mutate({ id, data: { completedToday: !completedToday } }, { onSuccess: invalidate });
   };
 
-  const handleDelete = (id: number, t: string) => {
-    deleteReminder.mutate({ id }, {
-      onSuccess: () => { toast({ title: "Reminder removed", description: `"${t}" deleted.` }); invalidate(); },
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteReminder.mutate({ id: deleteTarget.id }, {
+      onSuccess: () => {
+        toast({ title: "Reminder removed", description: `"${deleteTarget.title}" deleted.` });
+        invalidate();
+        setDeleteTarget(null);
+      },
     });
   };
 
@@ -93,6 +116,7 @@ export default function Reminders() {
         <button
           data-icon-only
           data-testid="button-add-reminder"
+          aria-label="Add new reminder"
           onClick={() => setOpen(true)}
           className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-md shadow-primary/25 hover:bg-primary/90 active:scale-95 transition-all"
         >
@@ -136,11 +160,10 @@ export default function Reminders() {
                   <button
                     data-icon-only
                     data-testid={`button-complete-${r.id}`}
+                    aria-label={r.completedToday ? `Mark "${r.title}" as incomplete` : `Mark "${r.title}" as done`}
                     onClick={() => handleComplete(r.id, r.completedToday)}
                     className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
-                      r.completedToday
-                        ? "bg-secondary/15 text-secondary"
-                        : `${t.color} hover:scale-105`
+                      r.completedToday ? "bg-secondary/15 text-secondary" : `${t.color} hover:scale-105`
                     }`}
                   >
                     {r.completedToday ? (
@@ -156,7 +179,7 @@ export default function Reminders() {
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="flex items-center gap-1 text-[13px] text-muted-foreground font-medium">
-                        <Clock className="w-3.5 h-3.5" /> {r.time}
+                        <Clock className="w-3.5 h-3.5" aria-hidden="true" /> {fmt12h(r.time)}
                       </span>
                       <Badge variant="secondary" className="text-[11px] px-2 py-0 h-5 font-medium">
                         {t.label}
@@ -174,7 +197,8 @@ export default function Reminders() {
                   <button
                     data-icon-only
                     data-testid={`button-delete-${r.id}`}
-                    onClick={() => handleDelete(r.id, r.title)}
+                    aria-label={`Delete reminder "${r.title}"`}
+                    onClick={() => setDeleteTarget({ id: r.id, title: r.title })}
                     className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
                   >
                     <Trash2 className="w-4 h-4" strokeWidth={2} />
@@ -186,7 +210,8 @@ export default function Reminders() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Add Reminder Dialog */}
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setTitleError(false); }}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">New Reminder</DialogTitle>
@@ -197,10 +222,14 @@ export default function Reminders() {
               <Input
                 data-testid="input-reminder-title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => { setTitle(e.target.value); setTitleError(false); }}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 placeholder="e.g. Take Blood Pressure Medicine"
-                className="h-[52px] text-[15px] rounded-xl"
+                className={`h-[52px] text-[15px] rounded-xl ${titleError ? "border-destructive focus:ring-destructive/20" : ""}`}
+                aria-invalid={titleError}
+                aria-describedby={titleError ? "title-error" : undefined}
               />
+              {titleError && <p id="title-error" className="text-[12px] text-destructive font-medium">Please enter a reminder name</p>}
             </div>
             <div className="space-y-1.5">
               <Label className="text-[14px] font-semibold text-foreground">Type</Label>
@@ -210,9 +239,7 @@ export default function Reminders() {
                 </SelectTrigger>
                 <SelectContent>
                   {REMINDER_TYPES.map((rt) => (
-                    <SelectItem key={rt.value} value={rt.value} className="text-[15px] py-2.5">
-                      {rt.label}
-                    </SelectItem>
+                    <SelectItem key={rt.value} value={rt.value} className="text-[15px] py-2.5">{rt.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -226,15 +253,18 @@ export default function Reminders() {
                 onChange={(e) => setTime(e.target.value)}
                 className="h-[52px] text-[15px] rounded-xl"
               />
+              {time && <p className="text-[12px] text-muted-foreground">Alarm at {fmt12h(time)}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[14px] font-semibold text-foreground">Days of week</Label>
-              <div className="flex gap-2 flex-wrap">
+              <Label className="text-[14px] font-semibold text-foreground">Repeat on days</Label>
+              <div className="flex gap-2 flex-wrap" role="group" aria-label="Select days of week">
                 {DAYS.map((d) => (
                   <button
                     key={d}
                     data-icon-only
                     data-testid={`button-day-${d}`}
+                    aria-label={d}
+                    aria-pressed={days.includes(d)}
                     onClick={() => toggleDay(d)}
                     className={`w-10 h-10 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
                       days.includes(d)
@@ -252,13 +282,34 @@ export default function Reminders() {
               size="lg"
               className="w-full h-[52px] text-[15px] font-semibold rounded-xl"
               onClick={handleCreate}
-              disabled={!title.trim() || days.length === 0 || createReminder.isPending}
+              disabled={days.length === 0 || createReminder.isPending}
             >
               {createReminder.isPending ? "Saving..." : "Set Reminder"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent className="max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Reminder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>"{deleteTarget?.title}"</strong>? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="rounded-xl bg-destructive text-white hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
